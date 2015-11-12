@@ -5,6 +5,10 @@ import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import org.lff.p2.ZtLib;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Created by LFF on 2015/11/12.
  */
@@ -12,7 +16,8 @@ public class P3DHeading {
 
     private static int head = 100;
 
-    private static boolean first = true;
+    private static AtomicBoolean first = new AtomicBoolean(true);
+    private static final Lock lock = new ReentrantLock();
 
     private static long last = 0;
 
@@ -38,11 +43,11 @@ public class P3DHeading {
                 // display pin state on console
                 PinState clk = event.getState();
                 PinState dt = pinDt.getState();
-                System.out.println(clk.toString() + " " + dt.toString() + " " + first);
-                if (first) {
-                    first = false;
+                if (first.compareAndSet(true, false)) {
+                    System.out.println("---> first, return to ingore.");
                     return;
                 }
+                System.out.println(clk.toString() + " " + dt.toString() + " " + first);
                 if (!clk.equals(dt)) {
                     increase();
                 } else {
@@ -67,13 +72,17 @@ public class P3DHeading {
     }
 
     private static void decrease() {
+        process(-1);
+    }
+
+    private static void process(int increase) {
         long time = System.currentTimeMillis();
         long delta = 0;
         if (last != 0) {
             delta = time - last;
-            head -= getDelta(delta);
+            head += increase* getDelta(delta);
         } else {
-            head -= 1;
+            head += increase;
         }
         last = time;
         update();
@@ -94,15 +103,6 @@ public class P3DHeading {
 
 
     private static void increase() {
-        long time = System.currentTimeMillis();
-        long delta = 0;
-        if (last != 0) {
-            delta = time - last;
-            head += getDelta(delta);
-        } else {
-            head += 1;
-        }
-        last = time;
-        update();
+        process(1);
     }
 }
