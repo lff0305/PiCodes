@@ -47,7 +47,7 @@ public class P3DHeading {
                     System.out.println("---> first, return to ingore.");
                     return;
                 }
-                System.out.println(clk.toString() + " " + dt.toString() + " " + first);
+                System.out.println(Thread.currentThread().getName() + " " + clk.toString() + " " + dt.toString() + " " + first);
                 if (!clk.equals(dt)) {
                     increase();
                 } else {
@@ -67,8 +67,14 @@ public class P3DHeading {
 
     }
 
-    private static void update() {
-        ZtLib.display(head % 360);
+    private static synchronized void update() {
+        if (head >= 0) {
+            head = head % 360;
+        } else {
+            head = Math.abs(head);
+            head = 360 - head;
+        }
+        ZtLib.display(head);
     }
 
     private static void decrease() {
