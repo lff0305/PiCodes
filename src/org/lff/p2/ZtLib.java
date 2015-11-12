@@ -34,23 +34,31 @@ public class ZtLib {
 
     public static void main(String[] argu) {
         init();
+        prepare();
+
+
+        for (int i=0; ; i++) {
+            display(i);
+        }
+    }
+
+    public static void prepare() {
         byte[] wake = new byte[]{REG_SLEEP, (byte)(0xA1 & 0xFF), 0, 0, 0};
         write(wake);
         byte[] bright = new byte[]{REG_BRIGHTNESS, 0x1f, 0x1f, 0, 0};
         write(bright);
+    }
 
-
-        for (int i=0; ; i++) {
-            int d3 = i / 1000;
-            int d2 = (i - d3 * 1000) / 100;
-            int d1 = (i - d3 * 1000 - d2 * 100) / 10;
-            int d0 = i % 10;
-            display(d3, d2, d1, d0);
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    public static void display(int i) {
+        int d3 = i / 1000;
+        int d2 = (i - d3 * 1000) / 100;
+        int d1 = (i - d3 * 1000 - d2 * 100) / 10;
+        int d0 = i % 10;
+        display(d3, d2, d1, d0);
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -59,7 +67,7 @@ public class ZtLib {
         write(data);
     }
 
-    private static void init() {
+    public static void init() {
         try {
             bus = I2CFactory.getInstance(1);
             device = bus.getDevice(0x51); //Default, address is 0x51
